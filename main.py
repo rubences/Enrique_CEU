@@ -32,8 +32,8 @@ def load_images_and_masks(image_dir, mask_dir, image_size=(256, 256)):
     return np.array(images), np.array(masks)
  
 # Load the images and masks
-image_dir = '/Users/enriquegonzalezardura/Documents/DATASETS/PH2Dataset/PH2_Dataset_images/train_imagenes_norm_A'
-mask_dir = '/Users/enriquegonzalezardura/Documents/DATASETS/PH2Dataset/PH2_Dataset_images/train_mascaras_A'
+image_dir = 'train_imagenes_norm_A'
+mask_dir = 'train_mascaras_A'
 images, masks = load_images_and_masks(image_dir, mask_dir)
  
 def unet_model(input_size=(256, 256, 3)):
