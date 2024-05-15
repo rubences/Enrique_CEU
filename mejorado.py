@@ -11,6 +11,7 @@ from tensorflow.keras.metrics import SparseCategoricalAccuracy
 from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras import mixed_precision
 
+# Establecer la política de precisión mixta
 mixed_precision.set_global_policy('mixed_float16')
 
 def load_images_and_masks(image_dir, mask_dir, image_size=(256, 256)):
@@ -26,7 +27,7 @@ def load_images_and_masks(image_dir, mask_dir, image_size=(256, 256)):
         if mask_file in mask_files and os.path.exists(img_path) and os.path.exists(mask_path):
             image = img_to_array(load_img(img_path, target_size=image_size))
             mask = img_to_array(load_img(mask_path, color_mode='grayscale', target_size=image_size))
-            mask = mask / 255.0  # Normalize masks to have values between 0 and 1
+            mask = mask / 255.0  # Normalizar máscaras para tener valores entre 0 y 1
             masks.append(np.round(mask))
             images.append(image)
 
@@ -59,45 +60,45 @@ def create_augmented_dataset(images, masks, batch_size):
 def unet_model(input_size=(256, 256, 3)):
     inputs = Input(input_size)
     # Encoder
-    c1 = Conv2D(32, (3, 3), activation='relu', padding='same')(inputs)
-    c1 = Conv2D(32, (3, 3), activation='relu', padding='same')(c1)
+    c1 = Conv2D(16, (3, 3), activation='relu', padding='same')(inputs)
+    c1 = Conv2D(16, (3, 3), activation='relu', padding='same')(c1)
     p1 = MaxPooling2D((2, 2))(c1)
 
-    c2 = Conv2D(64, (3, 3), activation='relu', padding='same')(p1)
-    c2 = Conv2D(64, (3, 3), activation='relu', padding='same')(c2)
+    c2 = Conv2D(32, (3, 3), activation='relu', padding='same')(p1)
+    c2 = Conv2D(32, (3, 3), activation='relu', padding='same')(c2)
     p2 = MaxPooling2D((2, 2))(c2)
 
-    c3 = Conv2D(128, (3, 3), activation='relu', padding='same')(p2)
-    c3 = Conv2D(128, (3, 3), activation='relu', padding='same')(c3)
+    c3 = Conv2D(64, (3, 3), activation='relu', padding='same')(p2)
+    c3 = Conv2D(64, (3, 3), activation='relu', padding='same')(c3)
     p3 = MaxPooling2D((2, 2))(c3)
 
-    c4 = Conv2D(256, (3, 3), activation='relu', padding='same')(p3)
-    c4 = Conv2D(256, (3, 3), activation='relu', padding='same')(c4)
+    c4 = Conv2D(128, (3, 3), activation='relu', padding='same')(p3)
+    c4 = Conv2D(128, (3, 3), activation='relu', padding='same')(c4)
     p4 = MaxPooling2D((2, 2))(c4)
 
-    c5 = Conv2D(512, (3, 3), activation='relu', padding='same')(p4)
-    c5 = Conv2D(512, (3, 3), activation='relu', padding='same')(c5)
+    c5 = Conv2D(256, (3, 3), activation='relu', padding='same')(p4)
+    c5 = Conv2D(256, (3, 3), activation='relu', padding='same')(c5)
 
     # Decoder
-    u6 = Conv2DTranspose(256, (3, 3), strides=(2, 2), padding='same')(c5)
+    u6 = Conv2DTranspose(128, (3, 3), strides=(2, 2), padding='same')(c5)
     u6 = concatenate([u6, c4])
-    c6 = Conv2D(256, (3, 3), activation='relu', padding='same')(u6)
-    c6 = Conv2D(256, (3, 3), activation='relu', padding='same')(c6)
+    c6 = Conv2D(128, (3, 3), activation='relu', padding='same')(u6)
+    c6 = Conv2D(128, (3, 3), activation='relu', padding='same')(c6)
 
-    u7 = Conv2DTranspose(128, (3, 3), strides=(2, 2), padding='same')(c6)
+    u7 = Conv2DTranspose(64, (3, 3), strides=(2, 2), padding='same')(c6)
     u7 = concatenate([u7, c3])
-    c7 = Conv2D(128, (3, 3), activation='relu', padding='same')(u7)
-    c7 = Conv2D(128, (3, 3), activation='relu', padding='same')(c7)
+    c7 = Conv2D(64, (3, 3), activation='relu', padding='same')(u7)
+    c7 = Conv2D(64, (3, 3), activation='relu', padding='same')(c7)
 
-    u8 = Conv2DTranspose(64, (3, 3), strides=(2, 2), padding='same')(c7)
+    u8 = Conv2DTranspose(32, (3, 3), strides=(2, 2), padding='same')(c7)
     u8 = concatenate([u8, c2])
-    c8 = Conv2D(64, (3, 3), activation='relu', padding='same')(u8)
-    c8 = Conv2D(64, (3, 3), activation='relu', padding='same')(c8)
+    c8 = Conv2D(32, (3, 3), activation='relu', padding='same')(u8)
+    c8 = Conv2D(32, (3, 3), activation='relu', padding='same')(c8)
 
-    u9 = Conv2DTranspose(32, (3, 3), strides=(2, 2), padding='same')(c8)
+    u9 = Conv2DTranspose(16, (3, 3), strides=(2, 2), padding='same')(c8)
     u9 = concatenate([u9, c1])
-    c9 = Conv2D(32, (3, 3), activation='relu', padding='same')(u9)
-    c9 = Conv2D(32, (3, 3), activation='relu', padding='same')(c9)
+    c9 = Conv2D(16, (3, 3), activation='relu', padding='same')(u9)
+    c9 = Conv2D(16, (3, 3), activation='relu', padding='same')(c9)
 
     outputs = Conv2D(2, (1, 1), activation='softmax')(c9)
 
@@ -108,6 +109,13 @@ def unet_model(input_size=(256, 256, 3)):
                   metrics=[SparseCategoricalAccuracy()])
 
     return model
+
+# Ruta de las imágenes y máscaras
+image_dir = '/workspaces/Enrique_CEU/train_imagenes_norm_A'
+mask_dir = '/workspaces/Enrique_CEU/train_mascaras_A'
+
+# Cargar las imágenes y máscaras
+images, masks = load_images_and_masks(image_dir, mask_dir)
 
 # Preparando la validación cruzada
 num_folds = 10
@@ -123,7 +131,7 @@ strategy = tf.distribute.MirroredStrategy()
 
 # Callbacks
 callbacks = [
-    ModelCheckpoint('model_best.h5', save_best_only=True, monitor='val_loss', mode='min'),
+    ModelCheckpoint('model_best.keras', save_best_only=True, monitor='val_loss', mode='min'),
     ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5, min_lr=1e-6)
 ]
 
@@ -133,8 +141,8 @@ for train_index, test_index in kf.split(images):
     train_images, val_images = images[train_index], images[test_index]
     train_masks, val_masks = masks[train_index], masks[test_index]
 
-    train_dataset = create_augmented_dataset(train_images, train_masks, batch_size=2)
-    val_dataset = create_augmented_dataset(val_images, val_masks, batch_size=2)
+    train_dataset = create_augmented_dataset(train_images, train_masks, batch_size=1)
+    val_dataset = create_augmented_dataset(val_images, val_masks, batch_size=1)
 
     with strategy.scope():
         # Crear un nuevo modelo para evitar la contaminación entre pliegues
@@ -161,3 +169,4 @@ for train_index, test_index in kf.split(images):
 print('Average scores for all folds:')
 print(f'> Accuracy: {np.mean(acc_per_fold)} (+- {np.std(acc_per_fold)})')
 print(f'> Loss: {np.mean(loss_per_fold)}')
+
