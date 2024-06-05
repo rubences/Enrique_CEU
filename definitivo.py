@@ -14,7 +14,7 @@ from tensorflow.keras import mixed_precision
 # Establecer la política de precisión mixta
 mixed_precision.set_global_policy('mixed_float16')
 
-def load_images_and_masks(image_dir, mask_dir, image_size=(256, 256)):
+def load_images_and_masks(image_dir, mask_dir, image_size=(224, 224)):
     images = []
     masks = []
     image_files = [f for f in os.listdir(image_dir) if f.endswith('.png')]
